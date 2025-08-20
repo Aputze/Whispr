@@ -2,6 +2,51 @@
 
 A simple and beautiful web application that transcribes audio files (including iPhone recordings) using OpenAI Whisper.
 
+## 📸 Screenshots
+
+### Main Interface
+![Whispr Main Interface](screenshots/main-interface.png)
+
+**Features shown in the screenshot:**
+- 🎛️ **Horizontal Slider** for model selection (Tiny → Large)
+- 🎤 **Drag & Drop** file upload area
+- 🤖 **Model Selection** with visual feedback
+- 📋 **Modern Copy Button** for easy text copying
+- 🎨 **Beautiful UI** with custom styling
+
+### Transcription Results
+![Transcription Results](screenshots/result.png)
+
+**The app provides:**
+- 📝 **Clean transcription text** with proper formatting
+- 🌍 **Language detection** (optimized for Hebrew)
+- ⏱️ **Duration and confidence** metrics
+- 🧹 **Automatic cleanup** of temporary files
+
+### Model Selection Slider
+![Model Selection](screenshots/slider.png)
+
+**Interactive Elements:**
+- 🎯 **Snapping to exact positions** (Tiny, Base, Small, Medium, Large)
+- 🎨 **Visual feedback** with highlighted tick marks
+- 📊 **Model size information** displayed clearly
+
+---
+
+### 📱 **Screenshots Added!**
+
+Your app now includes real screenshots showcasing:
+- **Main Interface** - Beautiful drag & drop interface with horizontal slider
+- **Transcription Results** - Clean output with modern copy button
+- **Model Selection Slider** - Interactive slider with snapping functionality
+
+**Screenshot files:**
+- `screenshots/main-interface.png` - Main app interface
+- `screenshots/result.png` - Transcription results display
+- `screenshots/slider.png` - Model selection slider
+
+---
+
 ## Features
 
 - 🎤 **Drag & Drop Interface**: Easy file upload with drag-and-drop support

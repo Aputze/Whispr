@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whispr - Audio Transcription</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        .upload-area {
+            border: 3px dashed #ddd;
+            border-radius: 15px;
+            padding: 40px 20px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #f0f4ff;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        .upload-hint {
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .model-selection {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .model-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .model-selection label {
+            color: #333;
+            font-weight: 500;
+            font-size: 1rem;
+            margin: 0;
+        }
+        
+        .chosen-model-name {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1rem;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .horizontal-slider-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
+        }
+        
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        
+        .slider-label {
+            font-size: 0.9rem;
+            color: #333;
+            font-weight: 500;
+            text-align: center;
+            line-height: 1.3;
+        }
+        
+        .slider-label.left {
+            color: #5a2d2d;
+        }
+        
+        .slider-label.right {
+            color: #2d5a2d;
+        }
+        
+        .horizontal-slider {
+            position: relative;
+            width: 400px;
+            height: 60px;
+            margin: 20px 0;
+        }
+        
+        .slider-track {
+            position: relative;
+            width: 100%;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            margin: 30px auto;
+        }
+        
+        .slider-thumb {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #667eea;
+            border-radius: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            cursor: grab;
+            transition: all 0.2s ease;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+        
+        .slider-thumb:hover {
+            background: #5a6fd8;
+            transform: translate(-50%, -50%) scale(1.1);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .slider-thumb:active {
+            cursor: grabbing;
+            transform: translate(-50%, -50%) scale(1.05);
+        }
+        
+        .tick-marks {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+        }
+        
+        .tick-mark {
+            position: absolute;
+            width: 2px;
+            height: 16px;
+            background: #333;
+            top: 50%;
+            transform: translateY(-50%);
+            transition: all 0.2s ease;
+        }
+        
+        .tick-mark:nth-child(1) { left: 0; }      /* Tiny */
+        .tick-mark:nth-child(2) { left: 25%; }    /* Base */
+        .tick-mark:nth-child(3) { left: 50%; }    /* Small */
+        .tick-mark:nth-child(4) { left: 75%; }    /* Medium */
+        .tick-mark:nth-child(5) { left: 100%; }   /* Large */
+        
+        .model-hint {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #666;
+            font-style: italic;
+        }
+
+        .progress-container {
+            display: none;
+            margin: 20px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .result-container {
+            display: none;
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .result-title {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .transcription-text {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #333;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .metadata {
+            margin-top: 15px;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .metadata-item {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .metadata-item:nth-child(3) {
+            background: #e8f5e8;
+            color: #2d5a2d;
+        }
+        
+        .metadata-item:nth-child(4) {
+            background: #e8f0ff;
+            color: #2d4a5a;
+        }
+        
+        .copy-section {
+            margin: 20px 0;
+            text-align: right;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .copy-btn {
+            background: transparent;
+            color: #9ca3af;
+            border: 1px solid #d1d5db;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 36px;
+            height: 36px;
+        }
+        
+        .copy-btn:hover {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+            color: #6b7280;
+        }
+        
+        .copy-btn:active {
+            background: #e5e7eb;
+            transform: scale(0.95);
+        }
+        
+        .copy-icon {
+            font-size: 1.2rem;
+            line-height: 1;
+        }
+        
+        .copy-status {
+            font-size: 0.9rem;
+            color: #10b981;
+            font-weight: 500;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .copy-status.show {
+            opacity: 1;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid #fcc;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .logo {
+                font-size: 2rem;
+            }
+            
+            .upload-area {
+                padding: 30px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">Whispr</div>
+        <div class="subtitle">Audio Transcription with OpenAI Whisper</div>
+        
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">🎤</div>
+            <div class="upload-text">Drop your audio file here</div>
+            <div class="upload-hint">or click to browse</div>
+            <input type="file" id="fileInput" class="file-input" accept=".m4a,.mp3,.wav,.aac,.m4b,.mp4">
+        </div>
+        
+        <div class="model-selection" id="modelSelection" style="display: none;">
+            <div class="model-header">
+                <label>Choose Model:</label>
+                <span class="chosen-model-name" id="chosenModelName">Small (500MB)</span>
+            </div>
+            <div class="horizontal-slider-container">
+                <div class="slider-labels">
+                    <span class="slider-label left">Tiny (39MB)<br>Fastest</span>
+                    <span class="slider-label right">Large (3GB)<br>Best Accuracy</span>
+                </div>
+                <div class="horizontal-slider" id="horizontalSlider">
+                    <div class="slider-track">
+                        <div class="slider-thumb" id="sliderThumb"></div>
+                        <div class="tick-marks">
+                            <div class="tick-mark" data-model="tiny" data-label="Tiny"></div>
+                            <div class="tick-mark" data-model="base" data-label="Base"></div>
+                            <div class="tick-mark" data-model="small" data-label="Small"></div>
+                            <div class="tick-mark" data-model="medium" data-label="Medium"></div>
+                            <div class="tick-mark" data-model="large" data-label="Large"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="model-hint">
+                💡 <strong>Tip:</strong> Drag the slider to choose between speed and accuracy
+            </div>
+        </div>
+        
+        <button class="btn" id="transcribeBtn" style="display: none;">Transcribe Audio</button>
+        
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div style="margin-top: 10px; color: #666;">Processing audio... This may take a few minutes.</div>
+        </div>
+        
+        <div class="result-container" id="resultContainer">
+            <div class="result-title">Transcription Result</div>
+            <div class="transcription-text" id="transcriptionText"></div>
+            <div class="copy-section">
+                <button class="copy-btn" id="copyBtn" onclick="copyTranscription()" title="Copy Text">
+                    <span class="copy-icon">📋</span>
+                </button>
+                <span class="copy-status" id="copyStatus"></span>
+            </div>
+            <div class="metadata" id="metadata"></div>
+        </div>
+        
+        <div id="errorContainer" style="display: none;"></div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const transcribeBtn = document.getElementById('transcribeBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const resultContainer = document.getElementById('resultContainer');
+        const errorContainer = document.getElementById('errorContainer');
+
+        // Drag and drop functionality
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            // Check file type
+            const allowedTypes = ['audio/m4a', 'audio/mp3', 'audio/wav', 'audio/aac', 'audio/m4b', 'video/mp4'];
+            if (!allowedTypes.includes(file.type) && !file.name.match(/\.(m4a|mp3|wav|aac|m4b|mp4)$/i)) {
+                showError('Please select a valid audio file (m4a, mp3, wav, aac, m4b, mp4)');
+                return;
+            }
+
+            // Check file size (100MB limit)
+            if (file.size > 100 * 1024 * 1024) {
+                showError('File size must be less than 100MB');
+                return;
+            }
+
+            // Show model selection and transcribe button
+            document.getElementById('modelSelection').style.display = 'block';
+            transcribeBtn.style.display = 'inline-block';
+            transcribeBtn.onclick = () => transcribeFile(file);
+            
+            // Initialize slider position (default to "small" model)
+            initializeSlider();
+            
+            // Update upload area text
+            uploadArea.querySelector('.upload-text').textContent = `Selected: ${file.name}`;
+            uploadArea.querySelector('.upload-hint').textContent = `Size: ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+        }
+
+        function transcribeFile(file) {
+            const formData = new FormData();
+            formData.append('audio_file', file);
+            
+            // Get selected model from slider
+            const selectedModel = getSelectedModel();
+            formData.append('model_size', selectedModel);
+
+            // Show progress
+            progressContainer.style.display = 'block';
+            transcribeBtn.disabled = true;
+            transcribeBtn.innerHTML = '<span class="loading"></span>Transcribing...';
+            
+            // Hide previous results and errors
+            resultContainer.style.display = 'none';
+            errorContainer.style.display = 'none';
+
+            // Simulate progress (since we can't track actual progress)
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 90) progress = 90;
+                document.getElementById('progressFill').style.width = progress + '%';
+            }, 500);
+
+            fetch('/transcribe', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                clearInterval(progressInterval);
+                document.getElementById('progressFill').style.width = '100%';
+                
+                setTimeout(() => {
+                    if (data.success) {
+                        showResult(data);
+                    } else {
+                        showError(data.error || 'Transcription failed');
+                    }
+                    
+                    // Reset UI
+                    progressContainer.style.display = 'none';
+                    transcribeBtn.disabled = false;
+                    transcribeBtn.innerHTML = 'Transcribe Audio';
+                    document.getElementById('progressFill').style.width = '0%';
+                }, 500);
+            })
+            .catch(error => {
+                clearInterval(progressInterval);
+                showError('Network error: ' + error.message);
+                progressContainer.style.display = 'none';
+                transcribeBtn.disabled = false;
+                transcribeBtn.innerHTML = 'Transcribe Audio';
+                document.getElementById('progressFill').style.width = '0%';
+            });
+        }
+
+        function showResult(data) {
+            document.getElementById('transcriptionText').textContent = data.transcription;
+            
+            const metadata = document.getElementById('metadata');
+            metadata.innerHTML = `
+                <div class="metadata-item">Language: ${data.language}</div>
+                <div class="metadata-item">Duration: ${Math.round(data.duration)}s</div>
+                <div class="metadata-item">Confidence: ${data.confidence || 'N/A'}%</div>
+                <div class="metadata-item">Model: ${data.model_used || 'N/A'}</div>
+            `;
+            
+            resultContainer.style.display = 'block';
+            errorContainer.style.display = 'none';
+        }
+
+        function showError(message) {
+            errorContainer.innerHTML = `<div class="error">${message}</div>`;
+            errorContainer.style.display = 'block';
+            resultContainer.style.display = 'none';
+        }
+        
+        function copyTranscription() {
+            const transcriptionText = document.getElementById('transcriptionText').textContent;
+            const copyStatus = document.getElementById('copyStatus');
+            
+            if (navigator.clipboard && window.isSecureContext) {
+                // Modern clipboard API
+                navigator.clipboard.writeText(transcriptionText).then(() => {
+                    showCopySuccess();
+                }).catch(() => {
+                    fallbackCopyTextToClipboard(transcriptionText);
+                });
+            } else {
+                // Fallback for older browsers
+                fallbackCopyTextToClipboard(transcriptionText);
+            }
+        }
+        
+        function fallbackCopyTextToClipboard(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showCopySuccess();
+                } else {
+                    showCopyError();
+                }
+            } catch (err) {
+                showCopyError();
+            }
+            
+            document.body.removeChild(textArea);
+        }
+        
+        function showCopySuccess() {
+            const copyStatus = document.getElementById('copyStatus');
+            copyStatus.textContent = '✓ Copied!';
+            copyStatus.classList.add('show');
+            
+            setTimeout(() => {
+                copyStatus.classList.remove('show');
+            }, 2000);
+        }
+        
+        function showCopyError() {
+            const copyStatus = document.getElementById('copyStatus');
+            copyStatus.textContent = '✗ Copy failed';
+            copyStatus.style.color = '#dc3545';
+            copyStatus.classList.add('show');
+            
+            setTimeout(() => {
+                copyStatus.classList.remove('show');
+                copyStatus.style.color = '#28a745';
+            }, 2000);
+        }
+        
+        // Slider functionality
+        let isDragging = false;
+        let currentModel = 'small'; // Default model
+        
+        function initializeSlider() {
+            const sliderThumb = document.getElementById('sliderThumb');
+            const horizontalSlider = document.getElementById('horizontalSlider');
+            
+            // Set initial position (50% - "small" model)
+            setSliderPosition(50);
+            
+            // Add event listeners
+            sliderThumb.addEventListener('mousedown', startDragging);
+            horizontalSlider.addEventListener('mousedown', handleSliderClick);
+            document.addEventListener('mousemove', handleDragging);
+            document.addEventListener('mouseup', stopDragging);
+            
+            // Touch events for mobile
+            sliderThumb.addEventListener('touchstart', startDragging);
+            horizontalSlider.addEventListener('touchstart', handleSliderClick);
+            document.addEventListener('touchmove', handleDragging);
+            document.addEventListener('touchend', stopDragging);
+        }
+        
+        function startDragging(e) {
+            e.preventDefault();
+            isDragging = true;
+            document.body.style.userSelect = 'none';
+        }
+        
+        function stopDragging() {
+            isDragging = false;
+            document.body.style.userSelect = '';
+        }
+        
+        function handleDragging(e) {
+            if (!isDragging) return;
+            
+            e.preventDefault();
+            const horizontalSlider = document.getElementById('horizontalSlider');
+            const rect = horizontalSlider.getBoundingClientRect();
+            
+            let clientX;
+            if (e.type === 'mousemove') {
+                clientX = e.clientX;
+            } else if (e.type === 'touchmove') {
+                clientX = e.touches[0].clientX;
+            }
+            
+            const relativeX = clientX - rect.left;
+            const percentage = Math.max(0, Math.min(100, (relativeX / rect.width) * 100));
+            
+            setSliderPosition(percentage);
+        }
+        
+        function handleSliderClick(e) {
+            if (e.target.classList.contains('slider-thumb')) return;
+            
+            e.preventDefault();
+            const horizontalSlider = document.getElementById('horizontalSlider');
+            const rect = horizontalSlider.getBoundingClientRect();
+            
+            let clientX;
+            if (e.type === 'mousedown') {
+                clientX = e.clientX;
+            } else if (e.type === 'touchstart') {
+                clientX = e.touches[0].clientX;
+            }
+            
+            const relativeX = clientX - rect.left;
+            const percentage = Math.max(0, Math.min(100, (relativeX / rect.width) * 100));
+            
+            setSliderPosition(percentage);
+        }
+        
+        function setSliderPosition(percentage) {
+            // Snap to exact positions only
+            const positions = [
+                { pos: 0, model: 'tiny' },     // Left
+                { pos: 25, model: 'base' },
+                { pos: 50, model: 'small' },
+                { pos: 75, model: 'medium' },
+                { pos: 100, model: 'large' }   // Right
+            ];
+            
+            // Find the nearest position
+            let nearestPosition = positions[0];
+            let minDistance = Math.abs(percentage - positions[0].pos);
+            
+            for (let i = 1; i < positions.length; i++) {
+                const distance = Math.abs(percentage - positions[i].pos);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    nearestPosition = positions[i];
+                }
+            }
+            
+            // Snap to the nearest position
+            const sliderThumb = document.getElementById('sliderThumb');
+            sliderThumb.style.left = `${nearestPosition.pos}%`;
+            currentModel = nearestPosition.model;
+            
+            // Update visual feedback
+            updateSliderVisuals();
+            updateSelectedModelDisplay();
+        }
+        
+        function updateSliderVisuals() {
+            const tickMarks = document.querySelectorAll('.tick-mark');
+            tickMarks.forEach(tick => {
+                tick.style.background = '#333';
+                tick.style.height = '16px';
+            });
+            
+            // Highlight the selected tick mark
+            const selectedTick = document.querySelector(`[data-model="${currentModel}"]`);
+            if (selectedTick) {
+                selectedTick.style.background = '#667eea';
+                selectedTick.style.height = '24px';
+            }
+        }
+        
+        function updateSelectedModelDisplay() {
+            const modelNames = {
+                'large': { name: 'Large', size: '3GB' },
+                'medium': { name: 'Medium', size: '1.5GB' },
+                'small': { name: 'Small', size: '500MB' },
+                'base': { name: 'Base', size: '150MB' },
+                'tiny': { name: 'Tiny', size: '39MB' }
+            };
+            
+            const chosenModelName = document.getElementById('chosenModelName');
+            
+            if (modelNames[currentModel]) {
+                chosenModelName.textContent = `${modelNames[currentModel].name} (${modelNames[currentModel].size})`;
+            }
+        }
+        
+        function getSelectedModel() {
+            return currentModel;
+        }
+    </script>
+</body>
+</html>

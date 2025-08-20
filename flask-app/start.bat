@@ -1,5 +1,5 @@
 @echo off
-echo Starting ClinInsight Audio Transcription App...
+echo Starting Whispr Audio Transcription App...
 echo.
 echo This will install dependencies and start the web server.
 echo.
